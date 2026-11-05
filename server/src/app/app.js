@@ -9,7 +9,7 @@ import {bunnyWebhook} from '../controller/lecture.controller.js'
 const app = express();
 app.post("/api/webhook/bunny", express.raw({ type: "*/*" }), bunnyWebhook);
 app.use(cors({
-  origin: "https://frontend-aftab.vercel.app/",
+  origin: "https://frontend-aftab.vercel.app",
   credentials: true,
 }))
 app.use(express.json());
