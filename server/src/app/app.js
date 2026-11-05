@@ -18,4 +18,8 @@ app.use(passport.initialize());
 app.use("/api/course", courseRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/lecture", lectureRouter);
+
+app.get('/', (req , res)=>{
+  res.send('server is running successFully')
+})
 export default app;
