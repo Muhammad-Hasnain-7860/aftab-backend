@@ -28,7 +28,7 @@ export const getDashboardStats = async (req, res) => {
     const { courseId } = req.params;
     const now = new Date();
 
-     const today = [
+    const today = [
       String(now.getDate()).padStart(2, "0"),
       String(now.getMonth() + 1).padStart(2, "0"),
       now.getFullYear(),
@@ -36,8 +36,6 @@ export const getDashboardStats = async (req, res) => {
 
     const lectures = await lectureModel.find({ courseId }).select("_id");
     const lectureIds = lectures.map((lecture) => lecture._id);
-
-    
 
     const [totalStudents, totalLectures, todaySessions] = await Promise.all([
       userModel.countDocuments({
@@ -55,7 +53,6 @@ export const getDashboardStats = async (req, res) => {
         deadline: today,
       }).select("_id lectureId"),
     ]);
-
 
     const students = await userModel
       .find({
@@ -116,13 +113,11 @@ export const getTodaySessions = async (req, res) => {
     const lectureIds = lectures.map((lecture) => lecture._id);
     const studentIds = students.map((student) => student._id);
 
-
     const sessions = await LectureSession.find({
       lectureId: { $in: lectureIds },
       deadline: today,
       status: "active",
     }).populate("lectureId", "title");
-
 
     const data = await Promise.all(
       sessions.map(async (session, index) => {
@@ -189,10 +184,12 @@ export const getTodayPendingStudents = async (req, res) => {
       status: "active",
     });
 
-    const students = await userModel.find({
-      role: "user",
-      course: courseId,
-    }).select("_id displayName email");
+    const students = await userModel
+      .find({
+        role: "user",
+        course: courseId,
+      })
+      .select("_id displayName email");
 
     const submittedIds = await messagesModel.distinct("senderId", {
       lectureSessionId: { $in: sessions.map((s) => s._id) },
@@ -201,17 +198,60 @@ export const getTodayPendingStudents = async (req, res) => {
 
     const pendingStudents = students.filter(
       (student) =>
-        !submittedIds.some(
-          (id) => id.toString() === student._id.toString()
-        )
+        !submittedIds.some((id) => id.toString() === student._id.toString()),
     );
 
     return apiResponse(res, 200, "Pending students fetched", pendingStudents);
-
   } catch (error) {
     console.log(error);
     return apiResponse(res, 500, "Failed to fetch pending students");
   }
 };
 
+export const getTodaySubmittedStudents = async (req, res) => {
+  try {
+    const { courseId } = req.params;
 
+    const now = new Date();
+    const today = [
+      String(now.getDate()).padStart(2, "0"),
+      String(now.getMonth() + 1).padStart(2, "0"),
+      now.getFullYear(),
+    ].join("-");
+
+    const lectures = await lectureModel.find({ courseId }).select("_id");
+
+    const sessions = await LectureSession.find({
+      lectureId: { $in: lectures.map((l) => l._id) },
+      deadline: today,
+      status: "active",
+    });
+
+    const students = await userModel
+      .find({
+        role: "user",
+        course: courseId,
+      })
+      .select("_id displayName email");
+
+    const submittedIds = await messagesModel.distinct("senderId", {
+      lectureSessionId: { $in: sessions.map((s) => s._id) },
+      senderId: { $in: students.map((s) => s._id) },
+      typeContent: "audio",
+    });
+
+    const submittedStudents = students.filter((student) =>
+      submittedIds.some((id) => id.toString() === student._id.toString()),
+    );
+
+    return apiResponse(
+      res,
+      200,
+      "Today's submitted students fetched",
+      submittedStudents,
+    );
+  } catch (error) {
+    console.log(error);
+    return apiResponse(res, 500, "Failed to fetch submitted students");
+  }
+};
