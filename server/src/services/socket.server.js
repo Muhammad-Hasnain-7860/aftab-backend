@@ -11,7 +11,7 @@ export const socketServer = (httpServer) => {
   const io = new Server(httpServer, {
     maxHttpBufferSize: 30 * 1024 * 1024,
     cors: {
-      origin: "http://localhost:5173",
+      origin: "https://frontend-aftab.vercel.app",
       credentials: true,
     },
   });
