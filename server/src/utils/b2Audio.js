@@ -9,7 +9,6 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 export const uploadAudio = async (audio, mimeType) => {
   const key = `audio/${randomUUID()}`;
 
-  console.log(config.KEY_NAME)
 
   await b2.send(
     new PutObjectCommand({
