@@ -110,30 +110,21 @@ export const getTodaySessions = async (req, res) => {
       userModel.find({ role: "user", course: courseId }).select("_id"),
     ]);
 
-    const lectureIds = lectures.map((lecture) => lecture._id);
-    const studentIds = students.map((student) => student._id);
-
     const sessions = await LectureSession.find({
-      lectureId: { $in: lectureIds },
+      lectureId: { $in: lectures.map((l) => l._id) },
       deadline: today,
       status: "active",
     }).populate("lectureId", "title");
 
+    const studentIds = students.map((s) => s._id);
+
     const data = await Promise.all(
       sessions.map(async (session, index) => {
-        const [listeningCompleted, submittedStudents] = await Promise.all([
-          marksModel.distinct("studentId", {
-            lectureSessionId: session._id,
-            studentId: { $in: studentIds },
-            listeningMarks: { $gt: 0 },
-          }),
-
-          messagesModel.distinct("senderId", {
-            lectureSessionId: session._id,
-            typeContent: "audio",
-            senderId: { $in: studentIds },
-          }),
-        ]);
+        const submittedStudents = await messagesModel.distinct("senderId", {
+          lectureSessionId: session._id,
+          typeContent: "audio",
+          senderId: { $in: studentIds },
+        });
 
         return {
           sessionNumber: index + 1,
@@ -142,11 +133,6 @@ export const getTodaySessions = async (req, res) => {
           lectureTitle: session.lectureId?.title,
           sessionDate: session.createdAt,
           submissionDeadline: session.deadline,
-
-          listeningCompleted: {
-            completed: listeningCompleted.length,
-            total: students.length,
-          },
 
           recitationsSubmitted: {
             submitted: submittedStudents.length,
@@ -164,7 +150,6 @@ export const getTodaySessions = async (req, res) => {
     return apiResponse(res, 500, "Failed to fetch today's sessions");
   }
 };
-
 export const getTodayPendingStudents = async (req, res) => {
   try {
     const { courseId } = req.params;

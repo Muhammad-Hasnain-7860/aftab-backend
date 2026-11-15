@@ -14,10 +14,6 @@ const MarksSchema = new mongoose.Schema(
       required: true,
     },
 
-    listeningMarks: {
-      type: Number,
-      default: 0,
-    },
 
     recitationMarks: {
       type: Number,
