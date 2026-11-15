@@ -5,11 +5,12 @@ export const apiResponse = (res , status , message , data = {})=>{
     })
 }
 
-export const cookieResponse = (res , refreshToken)=>{
-   return res.cookie('refreshToken' , refreshToken , {
-        httpOnly : true,
-        maxAge : 7*24*60*60*1000,
-        secure : false,
-        sameSite: "lax"
-    })
-}
+export const cookieResponse = (res, refreshToken) => {
+  return res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    secure: true,
+    sameSite: "none",
+    path: "/",
+  });
+};
