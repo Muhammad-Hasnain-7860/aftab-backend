@@ -9,14 +9,13 @@ import marksModel from "../model/marks.model.js";
 
 export const socketServer = (httpServer) => {
   const io = new Server(httpServer, {
-  maxHttpBufferSize: 30 * 1024 * 1024,
+    maxHttpBufferSize: 30 * 1024 * 1024,
 
-
-  cors: {
-    origin: "https://frontend-aftab.vercel.app",
-    credentials: true,
-  },
-});
+    cors: {
+      origin: "https://frontend-aftab.vercel.app",
+      credentials: true,
+    },
+  });
 
   io.use(async (socket, next) => {
     const token = socket.handshake?.headers?.authorization;
@@ -163,7 +162,7 @@ export const socketServer = (httpServer) => {
 
         callback?.({
           success: false,
-          message: "Audio sending failed",
+          message: error.message || "Audio sending failed",
         });
       }
     });
