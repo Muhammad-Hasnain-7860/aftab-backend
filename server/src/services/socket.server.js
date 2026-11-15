@@ -337,6 +337,8 @@ export const socketServer = (httpServer) => {
           .sort({ createdAt: 1 })
           .populate("senderId", "displayName role");
 
+          console.log(messages)
+
         callback?.({
           success: true,
           data: messages,
