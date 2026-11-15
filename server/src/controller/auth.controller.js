@@ -41,7 +41,7 @@ export const googleAuth = async (req, res) => {
   user.refreshToken = refreshToken;
   await user.save();
   cookieResponse(res, refreshToken);
-  return res.redirect("http://localhost:5173/auth/callback");
+  return res.redirect("https://frontend-aftab.vercel.app/auth/callback");
 };
 
 export const refresh = async (req, res) => {

@@ -22,7 +22,7 @@ authRouter.get(
 authRouter.get(
   "/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "http://localhost:5173/auth",
+    failureRedirect: "https://frontend-aftab.vercel.app/auth",
     session: false,
   }),
   googleAuth,
