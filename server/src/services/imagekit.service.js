@@ -6,14 +6,14 @@ const client = new ImageKit({
     timeout: 10 * 60 * 1000, // 5 minutes
 })
 
-export default async(buffer , fileName)=>{
-   const res = await client.files.upload({
-    file: await toFile(buffer, "lecture.mp4"),
-    fileName: fileName,
-    folder : '/lectures'
-    });
+const uploadPhoto = async (buffer, fileName) => {
+  const result = await client.files.upload({
+    file: await toFile(buffer, fileName),
+    fileName,
+    folder: "/thumbnails",
+  });
 
-    console.log(res)
+  return result;
+};
 
-    return res
-}
+export default uploadPhoto

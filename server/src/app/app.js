@@ -4,10 +4,13 @@ import authRouter from "../router/auth.route.js";
 import cookieParser from "cookie-parser";
 import courseRouter from "../router/course.route.js";
 import lectureRouter from "../router/lecture.route.js";
+import audioRouter from "../router/audio.route.js";
 import cors from "cors";
-import {bunnyWebhook} from '../controller/lecture.controller.js'
+// import {bunnyWebhook} from '../controller/lecture.controller.js'
+import commonRouter from "../router/common.router.js";
+import lectureSessionRouter from "../router/lectureSession.route.js";
 const app = express();
-app.post("/api/webhook/bunny", express.raw({ type: "*/*" }), bunnyWebhook);
+// app.post("/api/webhook/bunny", express.raw({ type: "*/*" }), bunnyWebhook);
 app.use(cors({
   origin: "https://frontend-aftab.vercel.app",
   credentials: true,
@@ -18,7 +21,9 @@ app.use(passport.initialize());
 app.use("/api/course", courseRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/lecture", lectureRouter);
-
+app.use('/api/audio' , audioRouter)
+app.use('/api/common' , commonRouter)
+app.use('/api/lectureSession' , lectureSessionRouter)
 app.get('/', (req , res)=>{
   res.send('server is running successFully')
 })

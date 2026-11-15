@@ -23,6 +23,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: "user",
   },
+  course : {
+    type : mongoose.Types.ObjectId,
+    default : null,
+  }
 });
 
 const userModel = mongoose.model("users", userSchema);

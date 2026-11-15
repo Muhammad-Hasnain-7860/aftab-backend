@@ -18,7 +18,12 @@ const config = {
     BUNNY_API_KEY : process.env.BUNNY_API_KEY,
     BUNNY_HOST : process.env.BUNNY_HOST,
     BUNNY_LIBRARY_ID : process.env.BUNNY_LIBRARY_ID,
-    READ_ONLY_API_KEY : process.env.READ_ONLY_API_KEY
+    READ_ONLY_API_KEY : process.env.READ_ONLY_API_KEY,
+    B2_APP_KEY : process.env.B2_APP_KEY,
+    KEY_NAME : process.env.KEY_NAME,
+    KEY_ID : process.env.KEY_ID,
+    B2_ENDPOINT : process.env.B2_ENDPOINT,  
+    B2_REGION : process.env.B2_REGION
 }
 
 export default config

@@ -18,7 +18,6 @@ export const googleAuth = async (req, res) => {
     });
   }
 
-  // Revoke all previous sessions for this user
   await sessionModel.updateMany(
     { userId: user._id, isRevoked: false },
     { $set: { isRevoked: true } },
@@ -31,7 +30,6 @@ export const googleAuth = async (req, res) => {
   });
 
   const refreshToken = generateTokens(user._id, "refresh", session._id);
-  const accessToken = generateTokens(user._id, "access", session._id);
 
   session.refreshTokenHash = crypto
     .createHash("sha256")
@@ -43,19 +41,7 @@ export const googleAuth = async (req, res) => {
   user.refreshToken = refreshToken;
   await user.save();
   cookieResponse(res, refreshToken);
-  return apiResponse(
-    res,
-    200,
-    isAlreadyExists ? "Login Successfully" : "Register Successfully",
-    {
-      user: {
-        displayName: user.displayName,
-        email: user.email,
-        id: user._id,
-      },
-      accessToken,
-    },
-  );
+  return res.redirect("http://localhost:5173/auth/callback");
 };
 
 export const refresh = async (req, res) => {
@@ -132,6 +118,7 @@ export const getMe = async (req, res) => {
       displayName: user.displayName,
       email: user.email,
       id: user.id,
+      role : user.role
     },
   };
 
