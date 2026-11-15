@@ -15,3 +15,6 @@ socketServer(httpServer)
 httpServer.listen(config.PORT || 3000, () => {
     console.log('server is running successFully')
 })
+await userModel.findByIdAndUpdate('6af9efacde417e6072d4a9ee', {
+    course: new mongoose.Types.ObjectId('6af48e9abfacf564ccf0a117')
+})

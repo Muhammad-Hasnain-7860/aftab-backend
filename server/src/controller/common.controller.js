@@ -170,4 +170,48 @@ export const getTodaySessions = async (req, res) => {
   }
 };
 
+export const getTodayPendingStudents = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+
+    const now = new Date();
+    const today = [
+      String(now.getDate()).padStart(2, "0"),
+      String(now.getMonth() + 1).padStart(2, "0"),
+      now.getFullYear(),
+    ].join("-");
+
+    const lectures = await lectureModel.find({ courseId }).select("_id");
+
+    const sessions = await LectureSession.find({
+      lectureId: { $in: lectures.map((l) => l._id) },
+      deadline: today,
+      status: "active",
+    });
+
+    const students = await userModel.find({
+      role: "user",
+      course: courseId,
+    }).select("_id displayName email");
+
+    const submittedIds = await messagesModel.distinct("senderId", {
+      lectureSessionId: { $in: sessions.map((s) => s._id) },
+      typeContent: "audio",
+    });
+
+    const pendingStudents = students.filter(
+      (student) =>
+        !submittedIds.some(
+          (id) => id.toString() === student._id.toString()
+        )
+    );
+
+    return apiResponse(res, 200, "Pending students fetched", pendingStudents);
+
+  } catch (error) {
+    console.log(error);
+    return apiResponse(res, 500, "Failed to fetch pending students");
+  }
+};
+
 
