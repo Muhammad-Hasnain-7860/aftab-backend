@@ -150,6 +150,7 @@ export const getTodaySessions = async (req, res) => {
     return apiResponse(res, 500, "Failed to fetch today's sessions");
   }
 };
+
 export const getTodayPendingStudents = async (req, res) => {
   try {
     const { courseId } = req.params;
@@ -169,6 +170,11 @@ export const getTodayPendingStudents = async (req, res) => {
       status: "active",
     });
 
+    // No active session today
+    if (sessions.length === 0) {
+      return apiResponse(res, 200, "No active session today", []);
+    }
+
     const students = await userModel
       .find({
         role: "user",
@@ -183,10 +189,17 @@ export const getTodayPendingStudents = async (req, res) => {
 
     const pendingStudents = students.filter(
       (student) =>
-        !submittedIds.some((id) => id.toString() === student._id.toString()),
+        !submittedIds.some(
+          (id) => id.toString() === student._id.toString()
+        )
     );
 
-    return apiResponse(res, 200, "Pending students fetched", pendingStudents);
+    return apiResponse(
+      res,
+      200,
+      "Pending students fetched",
+      pendingStudents
+    );
   } catch (error) {
     console.log(error);
     return apiResponse(res, 500, "Failed to fetch pending students");

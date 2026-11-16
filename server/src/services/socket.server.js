@@ -145,8 +145,7 @@ export const socketServer = (httpServer) => {
           },
         );
 
-        marks.totalMarks = marks.listeningMarks + marks.recitationMarks;
-
+        marks.totalMarks = marks.recitationMarks;
         await marks.save();
 
         io.to("admin").emit("receive_message", message);
@@ -194,7 +193,6 @@ export const socketServer = (httpServer) => {
           });
         }
 
-        
         const now = new Date();
 
         const today = [
@@ -359,7 +357,7 @@ export const socketServer = (httpServer) => {
           .sort({ createdAt: 1 })
           .populate("senderId", "displayName role");
 
-          console.log(messages)
+        console.log(messages);
 
         callback?.({
           success: true,
@@ -425,19 +423,18 @@ export const socketServer = (httpServer) => {
           });
         }
 
-        const studentMessage = await messagesModel.findOne({
-          lectureSessionId: sessionId,
-          senderId: studentId,
-        });
+        // const studentMessage = await messagesModel.findOne({
+        //   lectureSessionId: sessionId,
+        //   senderId: studentId,
+        // });
 
-        if (!studentMessage) {
-          return callback?.({
-            success: false,
-            message: "Student does not belong to this session",
-          });
-        }
+        // if (!studentMessage) {
+        //   return callback?.({
+        //     success: false,
+        //     message: "Student does not belong to this session",
+        //   });
+        // }
 
-        
         const now = new Date();
 
         const today = [
