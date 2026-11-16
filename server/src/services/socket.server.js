@@ -194,6 +194,28 @@ export const socketServer = (httpServer) => {
           });
         }
 
+        
+        const now = new Date();
+
+        const today = [
+          String(now.getDate()).padStart(2, "0"),
+          String(now.getMonth() + 1).padStart(2, "0"),
+          now.getFullYear(),
+        ].join("-");
+
+        const [d, m, y] = today.split("-").map(Number);
+        const todayDate = new Date(y, m - 1, d);
+
+        const [dd, mm, yy] = session.deadline.split("-").map(Number);
+        const deadlineDate = new Date(yy, mm - 1, dd);
+
+        if (todayDate > deadlineDate) {
+          return callback?.({
+            success: false,
+            message: "Submission deadline has passed",
+          });
+        }
+
         const message = await messagesModel.create({
           lectureSessionId: sessionId,
           senderId: userId,
@@ -412,6 +434,28 @@ export const socketServer = (httpServer) => {
           return callback?.({
             success: false,
             message: "Student does not belong to this session",
+          });
+        }
+
+        
+        const now = new Date();
+
+        const today = [
+          String(now.getDate()).padStart(2, "0"),
+          String(now.getMonth() + 1).padStart(2, "0"),
+          now.getFullYear(),
+        ].join("-");
+
+        const [d, m, y] = today.split("-").map(Number);
+        const todayDate = new Date(y, m - 1, d);
+
+        const [dd, mm, yy] = session.deadline.split("-").map(Number);
+        const deadlineDate = new Date(yy, mm - 1, dd);
+
+        if (todayDate > deadlineDate) {
+          return callback?.({
+            success: false,
+            message: "Submission deadline has passed",
           });
         }
 
