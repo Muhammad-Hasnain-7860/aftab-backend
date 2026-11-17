@@ -1,11 +1,13 @@
 import {Router} from 'express'
 import { authentication, authorization } from '../middleware/auth.middleware.js'
-import { courseBy, getCourseMarks, getDashboardStats, getTodayPendingStudents, getTodaySessions, getTodaySubmittedStudents } from '../controller/common.controller.js'
-import { commonValid } from '../validation/common.valid.js'
+import { courseBy, getAllStudents, getCourseMarks, getDashboardStats, getTodayPendingStudents, getTodaySessions, getTodaySubmittedStudents, grantCourseAccess } from '../controller/common.controller.js'
+import { commonValid, grantCourseAccessValid } from '../validation/common.valid.js'
 
 const commonRouter = Router()
 
 commonRouter.get('/courseBy/:courseId', authentication, authorization, commonValid, courseBy)
+commonRouter.get('/students', authentication, authorization, getAllStudents)
+commonRouter.patch('/students/:studentId/courses', authentication, authorization, grantCourseAccessValid, grantCourseAccess)
 commonRouter.get('/course-marks/:courseId', authentication, authorization, commonValid, getCourseMarks)
 commonRouter.get('/dashboard-stats/:courseId', authentication, authorization, commonValid, getDashboardStats)
 commonRouter.get('/dashboard-todayLecture/:courseId', authentication, authorization, commonValid, getTodaySessions)

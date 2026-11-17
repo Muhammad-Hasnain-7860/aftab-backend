@@ -3,23 +3,94 @@ import lectureModel from "../model/lecture.model.js";
 import { LectureSession } from "../model/lectureSession.model.js";
 import marksModel from "../model/marks.model.js";
 import messagesModel from "../model/message.model.js";
+import courseModel from "../model/course.model.js";
 import { apiResponse } from "../utils/api.utils.js";
+
+const studentsInCourse = (courseId) => ({
+  role: "user",
+  $or: [{ courses: courseId }, { course: courseId }],
+});
 
 export const courseBy = async (req, res) => {
   try {
     const { courseId } = req.params;
 
     const students = await userModel
-      .find({
-        role: "user",
-        course: courseId,
-      })
-      .select("_id displayName email role course");
+      .find(studentsInCourse(courseId))
+      .select("_id displayName email role course courses");
 
     return apiResponse(res, 200, "Students fetched successfully", students);
   } catch (error) {
     console.error("Course students error:", error);
     return apiResponse(res, 500, "Failed to fetch students for this course");
+  }
+};
+
+export const getAllStudents = async (req, res) => {
+  try {
+    const students = await userModel
+      .find({ role: "user" })
+      .select("_id displayName email course courses")
+      .populate("course", "title")
+      .populate("courses", "title")
+      .sort({ displayName: 1 });
+
+    return apiResponse(res, 200, "Students fetched successfully", students);
+  } catch (error) {
+    console.error("All students error:", error);
+    return apiResponse(res, 500, "Failed to fetch students");
+  }
+};
+
+export const grantCourseAccess = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const { courseId } = req.body;
+
+    const [student, course] = await Promise.all([
+      userModel.findOne({ _id: studentId, role: "user" }),
+      courseModel.findById(courseId).select("_id"),
+    ]);
+
+    if (!student) {
+      return apiResponse(res, 404, "Student not found");
+    }
+
+    if (!course) {
+      return apiResponse(res, 404, "Course not found");
+    }
+
+    const assignedCourseIds = new Set(
+      (student.courses || []).map((assignedCourseId) =>
+        assignedCourseId.toString(),
+      ),
+    );
+
+    if (student.course) {
+      assignedCourseIds.add(student.course.toString());
+    }
+
+    if (!assignedCourseIds.has(course._id.toString())) {
+      assignedCourseIds.add(course._id.toString());
+      student.courses = [...assignedCourseIds];
+      await student.save();
+    }
+
+    const updatedStudent = await userModel
+      .findById(studentId)
+      .select("_id displayName email course courses")
+      .populate("course", "title")
+      .populate("courses", "title");
+
+    return apiResponse(
+      res,
+      200,
+      "Course access granted successfully",
+      updatedStudent,
+    );
+  } catch (error) {
+    console.error("Grant course access error:", error);
+    return apiResponse(res, 500, "Failed to grant course access");
   }
 };
 
@@ -29,9 +100,7 @@ export const getCourseMarks = async (req, res) => {
 
     const [lectures, students] = await Promise.all([
       lectureModel.find({ courseId }).select("_id"),
-      userModel
-        .find({ role: "user", course: courseId })
-        .select("_id displayName email"),
+      userModel.find(studentsInCourse(courseId)).select("_id displayName email"),
     ]);
 
     const sessions = await LectureSession.find({
@@ -103,10 +172,7 @@ export const getDashboardStats = async (req, res) => {
     const lectureIds = lectures.map((lecture) => lecture._id);
 
     const [totalStudents, totalLectures, todaySessions] = await Promise.all([
-      userModel.countDocuments({
-        role: "user",
-        course: courseId,
-      }),
+      userModel.countDocuments(studentsInCourse(courseId)),
 
       LectureSession.countDocuments({
         lectureId: { $in: lectureIds },
@@ -119,12 +185,7 @@ export const getDashboardStats = async (req, res) => {
       }).select("_id lectureId"),
     ]);
 
-    const students = await userModel
-      .find({
-        role: "user",
-        course: courseId,
-      })
-      .select("_id");
+    const students = await userModel.find(studentsInCourse(courseId)).select("_id");
 
     const studentIds = students.map((student) => student._id);
 
@@ -172,7 +233,7 @@ export const getTodaySessions = async (req, res) => {
 
     const [lectures, students] = await Promise.all([
       lectureModel.find({ courseId }).select("_id"),
-      userModel.find({ role: "user", course: courseId }).select("_id"),
+      userModel.find(studentsInCourse(courseId)).select("_id"),
     ]);
 
     const sessions = await LectureSession.find({
@@ -241,10 +302,7 @@ export const getTodayPendingStudents = async (req, res) => {
     }
 
     const students = await userModel
-      .find({
-        role: "user",
-        course: courseId,
-      })
+      .find(studentsInCourse(courseId))
       .select("_id displayName email");
 
     const submittedIds = await messagesModel.distinct("senderId", {
@@ -291,10 +349,7 @@ export const getTodaySubmittedStudents = async (req, res) => {
     });
 
     const students = await userModel
-      .find({
-        role: "user",
-        course: courseId,
-      })
+      .find(studentsInCourse(courseId))
       .select("_id displayName email");
 
     const submittedIds = await messagesModel.distinct("senderId", {

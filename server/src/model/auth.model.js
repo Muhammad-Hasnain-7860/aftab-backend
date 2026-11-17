@@ -25,8 +25,18 @@ const userSchema = new mongoose.Schema({
   },
   course : {
     type : mongoose.Types.ObjectId,
+    ref: "courses",
     default : null,
-  }
+  },
+  courses: {
+    type: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "courses",
+      },
+    ],
+    default: [],
+  },
 });
 
 const userModel = mongoose.model("users", userSchema);
