@@ -23,6 +23,71 @@ export const courseBy = async (req, res) => {
   }
 };
 
+export const getCourseMarks = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+
+    const [lectures, students] = await Promise.all([
+      lectureModel.find({ courseId }).select("_id"),
+      userModel
+        .find({ role: "user", course: courseId })
+        .select("_id displayName email"),
+    ]);
+
+    const sessions = await LectureSession.find({
+      lectureId: { $in: lectures.map((lecture) => lecture._id) },
+    })
+      .select("_id lectureId")
+      .populate("lectureId", "title");
+
+    const marks = await marksModel
+      .find({
+        studentId: { $in: students.map((student) => student._id) },
+        lectureSessionId: { $in: sessions.map((session) => session._id) },
+      })
+      .select("studentId lectureSessionId recitationMarks totalMarks")
+      .lean();
+
+    const marksByStudentAndSession = new Map(
+      marks.map((mark) => [
+        `${mark.studentId}:${mark.lectureSessionId}`,
+        mark,
+      ]),
+    );
+
+    const data = students.map((student) => {
+      const studentMarks = sessions.map((session) => {
+        const mark = marksByStudentAndSession.get(
+          `${student._id}:${session._id}`,
+        );
+
+        return {
+          lectureSessionId: session._id,
+          lectureTitle: session.lectureId?.title || "Lecture",
+          recitationMarks: mark?.recitationMarks || 0,
+          totalMarks: mark?.totalMarks || 0,
+        };
+      });
+
+      return {
+        _id: student._id,
+        displayName: student.displayName,
+        email: student.email,
+        totalMarks: studentMarks.reduce(
+          (total, mark) => total + mark.totalMarks,
+          0,
+        ),
+        marks: studentMarks,
+      };
+    });
+
+    return apiResponse(res, 200, "Course marks fetched successfully", data);
+  } catch (error) {
+    console.error("Course marks error:", error);
+    return apiResponse(res, 500, "Failed to fetch course marks");
+  }
+};
+
 export const getDashboardStats = async (req, res) => {
   try {
     const { courseId } = req.params;
