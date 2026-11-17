@@ -1,5 +1,9 @@
 import {Router} from 'express'
-import { authentication, authorization } from '../middleware/auth.middleware.js'
+import {
+  authentication,
+  authorization,
+  courseAccessAuthorization,
+} from '../middleware/auth.middleware.js'
 import {
   allLectureSession,
   updateLectureSessionDeadline,
@@ -11,7 +15,13 @@ import {
 
 const lectureSessionRouter = Router()
 
-lectureSessionRouter.get('/:courseId' , authentication , authorization , lectureSessionValid,  allLectureSession)
+lectureSessionRouter.get(
+  '/:courseId',
+  authentication,
+  lectureSessionValid,
+  courseAccessAuthorization,
+  allLectureSession,
+)
 lectureSessionRouter.patch(
   '/:courseId/:sessionId/deadline',
   authentication,

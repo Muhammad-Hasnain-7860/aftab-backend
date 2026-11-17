@@ -11,6 +11,7 @@ import { Router } from "express";
 import {allLecture, createLecture} from '../controller/lecture.controller.js'
 
 import {
+  courseAccessAuthorization,
   authentication,
   authorization,
 } from "../middleware/auth.middleware.js";
@@ -58,5 +59,11 @@ const lectureRouter = Router();
 // );
 
 lectureRouter.post("/create", authentication , authorization , upload.single("audio"),multerErrorHandler ,createLectureValid ,  createLecture);
-lectureRouter.get('/:courseId' , authentication , getAllLectureValid , allLecture)
+lectureRouter.get(
+  '/:courseId',
+  authentication,
+  getAllLectureValid,
+  courseAccessAuthorization,
+  allLecture,
+)
 export default lectureRouter;

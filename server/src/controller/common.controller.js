@@ -42,6 +42,27 @@ export const getAllStudents = async (req, res) => {
   }
 };
 
+export const getMyCourses = async (req, res) => {
+  try {
+    const courseIds = [
+      ...new Set(
+        [...(req.user.courses || []), req.user.course]
+          .filter(Boolean)
+          .map((courseId) => courseId.toString()),
+      ),
+    ];
+
+    const courses = await courseModel
+      .find({ _id: { $in: courseIds } })
+      .select("_id title description thumbnail");
+
+    return apiResponse(res, 200, "Your courses fetched successfully", courses);
+  } catch (error) {
+    console.error("Student courses error:", error);
+    return apiResponse(res, 500, "Failed to fetch your courses");
+  }
+};
+
 export const grantCourseAccess = async (req, res) => {
   try {
     const { studentId } = req.params;
@@ -91,6 +112,51 @@ export const grantCourseAccess = async (req, res) => {
   } catch (error) {
     console.error("Grant course access error:", error);
     return apiResponse(res, 500, "Failed to grant course access");
+  }
+};
+
+export const getMyCourseMarks = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const lectures = await lectureModel.find({ courseId }).select("_id");
+    const sessions = await LectureSession.find({
+      lectureId: { $in: lectures.map((lecture) => lecture._id) },
+    })
+      .select("_id lectureId")
+      .populate("lectureId", "title");
+
+    const marks = await marksModel
+      .find({
+        studentId: req.user._id,
+        lectureSessionId: { $in: sessions.map((session) => session._id) },
+      })
+      .select("lectureSessionId recitationMarks totalMarks")
+      .lean();
+
+    const marksBySession = new Map(
+      marks.map((mark) => [String(mark.lectureSessionId), mark]),
+    );
+    const sessionMarks = sessions.map((session) => {
+      const mark = marksBySession.get(String(session._id));
+
+      return {
+        lectureSessionId: session._id,
+        lectureTitle: session.lectureId?.title || "Lecture",
+        recitationMarks: mark?.recitationMarks || 0,
+        totalMarks: mark?.totalMarks || 0,
+      };
+    });
+
+    return apiResponse(res, 200, "Your course marks fetched successfully", {
+      totalMarks: sessionMarks.reduce(
+        (total, mark) => total + mark.totalMarks,
+        0,
+      ),
+      marks: sessionMarks,
+    });
+  } catch (error) {
+    console.error("Student course marks error:", error);
+    return apiResponse(res, 500, "Failed to fetch your course marks");
   }
 };
 

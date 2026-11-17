@@ -6,6 +6,20 @@ import { LectureSession } from "../model/lectureSession.model.js";
 import { uploadAudio } from "../utils/b2Audio.js";
 import cors from "cors";
 import marksModel from "../model/marks.model.js";
+import { userHasCourseAccess } from "../middleware/auth.middleware.js";
+
+const getStudentSession = async (user, sessionId) => {
+  const session = await LectureSession.findById(sessionId).populate(
+    "lectureId",
+    "courseId",
+  );
+
+  if (!session || !userHasCourseAccess(user, session.lectureId?.courseId)) {
+    return null;
+  }
+
+  return session;
+};
 
 export const socketServer = (httpServer) => {
   const io = new Server(httpServer, {
@@ -86,12 +100,12 @@ export const socketServer = (httpServer) => {
           });
         }
 
-        const session = await LectureSession.findById(sessionId);
+        const session = await getStudentSession(socket.user, sessionId);
 
         if (!session || session.status !== "active") {
           return callback?.({
             success: false,
-            message: "Session is not active",
+            message: "Session is not active or you do not have course access",
           });
         }
 
@@ -256,12 +270,12 @@ export const socketServer = (httpServer) => {
           });
         }
 
-        const session = await LectureSession.findById(sessionId);
+        const session = await getStudentSession(socket.user, sessionId);
 
         if (!session || session.status !== "active") {
           return callback?.({
             success: false,
-            message: "Session is not active",
+            message: "Session is not active or you do not have course access",
           });
         }
 
@@ -321,6 +335,16 @@ export const socketServer = (httpServer) => {
             success: false,
             message: "Session ID required",
           });
+        }
+
+        if (role === "user") {
+          const session = await getStudentSession(socket.user, sessionId);
+          if (!session) {
+            return callback?.({
+              success: false,
+              message: "You do not have access to this session",
+            });
+          }
         }
 
         let query;

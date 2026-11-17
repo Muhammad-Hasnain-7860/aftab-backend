@@ -49,3 +49,38 @@ export const authorization = (req , res , next)=>{
   }
   return next()
 }
+
+export const userHasCourseAccess = (user, courseId) => {
+  const assignedCourses = [...(user.courses || []), user.course].filter(Boolean);
+
+  return assignedCourses.some(
+    (assignedCourse) => assignedCourse.toString() === String(courseId),
+  );
+};
+
+export const studentAuthorization = (req, res, next) => {
+  if (req.user.role !== "user") {
+    return apiResponse(res, 403, "Only students can access this resource");
+  }
+
+  return next();
+};
+
+export const studentCourseAccess = (req, res, next) => {
+  if (
+    req.user.role !== "user" ||
+    !userHasCourseAccess(req.user, req.params.courseId)
+  ) {
+    return apiResponse(res, 403, "You do not have access to this course");
+  }
+
+  return next();
+};
+
+export const courseAccessAuthorization = (req, res, next) => {
+  if (req.user.role === "admin") {
+    return next();
+  }
+
+  return studentCourseAccess(req, res, next);
+};
