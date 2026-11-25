@@ -32,3 +32,11 @@ export const getAllCourses = async (req, res) => {
 
   return apiResponse(res, 200, "fetched courses SuccessFully", courses);
 };
+
+export const getPublicCourses = async (req, res) => {
+  const courses = await courseModel
+    .find({ isPublished: true })
+    .select("_id title description price thumbnail");
+
+  return apiResponse(res, 200, "Published courses fetched successfully", courses);
+};
