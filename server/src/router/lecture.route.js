@@ -58,7 +58,18 @@ const lectureRouter = Router();
 //   checkActiveUpload,
 // );
 
-lectureRouter.post("/create", authentication , authorization , upload.single("audio"),multerErrorHandler ,createLectureValid ,  createLecture);
+lectureRouter.post(
+  "/create",
+  authentication,
+  authorization,
+  upload.fields([
+    { name: "audio", maxCount: 1 },
+    { name: "image", maxCount: 1 },
+  ]),
+  multerErrorHandler,
+  createLectureValid,
+  createLecture,
+);
 lectureRouter.get(
   '/:courseId',
   authentication,

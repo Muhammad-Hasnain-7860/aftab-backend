@@ -4,17 +4,18 @@ const upload = multer({
   storage: memoryStorage(),
   limits: {
     fileSize: 30 * 1024 * 1024,
-    files: 1,
+    files: 2,
   },
   fileFilter: (req, file, cb) => {
-    if (
-      file.mimetype.startsWith("video/") ||
-      file.mimetype.startsWith("audio/") ||
-      file.mimetype.startsWith("image/")
-    ) {
+    const isAudio = file.fieldname === "audio" && file.mimetype.startsWith("audio/");
+    const isImage =
+      ["image", "thumbnail"].includes(file.fieldname) &&
+      file.mimetype.startsWith("image/");
+
+    if (isAudio || isImage) {
       cb(null, true);
     } else {
-      cb(new Error("Only video and audio files are allowed!"), false);
+      cb(new Error("Upload an audio file or image file"), false);
     }
   },
 });

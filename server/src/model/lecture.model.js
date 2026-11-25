@@ -20,6 +20,9 @@ const lectureSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    imageUrl: {
+      type: String,
+    },
   },
   {
     timestamps: true,

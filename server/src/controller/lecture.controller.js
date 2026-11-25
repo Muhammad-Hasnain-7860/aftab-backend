@@ -406,6 +406,7 @@ import lectureModel from "../model/lecture.model.js";
 import { LectureSession } from "../model/lectureSession.model.js";
 import { apiResponse } from "../utils/api.utils.js";
 import { uploadAudio } from "../utils/b2Audio.js";
+import uploadPhoto from "../services/imagekit.service.js";
 import courseModel from "../model/course.model.js";
 // import { LectureSession } from "../models/lectureSession.model.js";
 // import { uploadAudio } from "../services/audio.service.js";
@@ -414,17 +415,21 @@ import courseModel from "../model/course.model.js";
 export const createLecture = async (req, res) => {
   try {
     const { title, description, courseId } = req.body;
+    const audioFile = req.files?.audio?.[0];
+    const imageFile = req.files?.image?.[0];
 
-    console.log(req.file)
-
-    if (!req.file) {
+    if (!audioFile) {
       return apiResponse(res, 400, "Audio file is required");
     }
 
+    const imageResult = imageFile
+      ? await uploadPhoto(imageFile.buffer, imageFile.originalname)
+      : null;
+
     // Upload audio to Backblaze
     const audioKey = await uploadAudio(
-      req.file.buffer,
-      req.file.mimetype
+      audioFile.buffer,
+      audioFile.mimetype
     );
 
     // Create lecture
@@ -433,6 +438,7 @@ export const createLecture = async (req, res) => {
       description,
       courseId,
       audioKey,
+      imageUrl: imageResult?.url,
     });
 
     // Create lecture session
